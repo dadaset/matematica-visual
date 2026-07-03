@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Matemática Visual</title>
+<style>
+  :root{
+    --bg:#121319;
+    --panel:#171922;
+    --line:rgba(231,229,223,.07);
+    --ink:#e7e5df;
+    --dim:#8f8d85;
+    --blue:#86abd4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    justify-content:center;
+    padding:72px 20px;
+  }
+  main{width:100%;max-width:640px}
+
+  h1{font-size:22px;font-weight:600;letter-spacing:.01em}
+  .sub{margin-top:9px;font-size:14px;color:var(--dim);line-height:1.6;max-width:52ch}
+
+  .list{margin-top:44px;display:flex;flex-direction:column;gap:10px}
+
+  a.entry{
+    display:block;
+    padding:18px 20px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    text-decoration:none;
+    color:var(--ink);
+    transition:border-color .18s ease, background .18s ease;
+  }
+  a.entry:hover{
+    border-color:rgba(231,229,223,.16);
+    background:#1b1d27;
+  }
+  .entry .n{
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dim);
+  }
+  .entry .t{margin-top:5px;font-size:15.5px}
+  .entry .d{margin-top:4px;font-size:13px;color:var(--dim);line-height:1.5}
+
+  footer{margin-top:48px;font-size:12px;color:var(--dim)}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Matemática Visual</h1>
+    <p class="sub">
+      um pequeno livro de demonstrações interativas &mdash; conceitos de
+      matemática, cálculo e física explorados através de gráficos que
+      respondem ao toque.
+    </p>
+  </header>
+
+  <section class="list">
+    <a class="entry" href="teorema-fundamental-do-calculo.html">
+      <div class="n">Cálculo</div>
+      <div class="t">O Teorema Fundamental do Cálculo</div>
+      <div class="d">derivar e acumular como operações inversas, vistas em tempo real</div>
+    </a>
+  </section>
+
+  <footer>mais demonstrações em construção</footer>
+</main>
+</body>
+</html>
