@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O Teorema Fundamental do Cálculo</title>
+<style>
+  :root{
+    --bg:#121319;
+    --panel:#171922;
+    --line:rgba(231,229,223,.07);
+    --ink:#e7e5df;
+    --dim:#8f8d85;
+    --blue:#86abd4;
+    --gold:#cfa870;
+    --sage:#93bb9a;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    justify-content:center;
+    padding:56px 20px 72px;
+  }
+  main{width:100%;max-width:760px}
+
+  h1{font-size:19px;font-weight:600;letter-spacing:.01em}
+  .sub{
+    margin-top:7px;font-size:13.5px;color:var(--dim);line-height:1.55;
+    min-height:1.55em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    transition:opacity .12s ease;
+  }
+
+  .math{
+    font-family:"STIX Two Text","Iowan Old Style",Georgia,"Times New Roman",serif;
+    font-style:italic;
+  }
+  .tf{color:#9db8d3}
+  .tdf{color:#cbb188}
+  .tF{color:#a3c2a9}
+
+  .intro{margin-top:28px}
+  .intro-toggle{
+    font:inherit;font-size:13px;color:var(--dim);
+    background:none;border:none;padding:0;cursor:pointer;
+    display:inline-flex;align-items:baseline;gap:7px;
+    transition:color .15s ease;
+  }
+  .intro-toggle:hover{color:var(--ink)}
+  .chev{
+    display:inline-block;font-size:11px;
+    transition:transform .3s ease;transform-origin:50% 55%;
+  }
+  .intro.open .chev{transform:rotate(180deg)}
+  .intro-body{
+    display:grid;grid-template-rows:0fr;opacity:0;
+    transition:grid-template-rows .35s ease,opacity .3s ease;
+  }
+  .intro.open .intro-body{grid-template-rows:1fr;opacity:1}
+  .intro-body > div{overflow:hidden}
+  .intro-body p{
+    margin:10px 0 2px;font-size:13.5px;line-height:1.7;
+    color:var(--dim);max-width:60ch;
+  }
+
+  .controls{
+    display:flex;align-items:center;gap:22px;
+    margin:30px 0 14px;flex-wrap:wrap;
+  }
+  #play{
+    width:34px;height:34px;border-radius:50%;
+    background:transparent;color:var(--ink);
+    border:1px solid rgba(231,229,223,.18);
+    display:grid;place-items:center;cursor:pointer;
+    transition:background .18s ease,border-color .18s ease;
+  }
+  #play:hover{background:rgba(231,229,223,.06)}
+  #play svg{width:12px;height:12px;fill:currentColor;display:block}
+
+  .speed{display:flex;align-items:center;gap:10px}
+  .speed span{
+    font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dim);
+  }
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;
+    width:118px;height:16px;background:transparent;cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-runnable-track{
+    height:2px;background:rgba(231,229,223,.18);border-radius:1px;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:11px;height:11px;border-radius:50%;
+    background:var(--ink);margin-top:-4.5px;
+  }
+  input[type=range]::-moz-range-track{
+    height:2px;background:rgba(231,229,223,.18);border-radius:1px;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:11px;height:11px;border:none;border-radius:50%;background:var(--ink);
+  }
+
+  .pills{margin-left:auto;display:flex;gap:6px}
+  .pill{
+    font-size:13.5px;padding:5px 13px;border-radius:999px;
+    background:transparent;border:1px solid transparent;color:var(--dim);
+    cursor:pointer;transition:color .15s ease,background .15s ease,border-color .15s ease;
+  }
+  .pill:hover{color:var(--ink)}
+  .pill.active{
+    color:var(--ink);
+    background:rgba(231,229,223,.06);
+    border-color:rgba(231,229,223,.12);
+  }
+
+  .stage{display:grid;gap:10px;transition:opacity .16s ease}
+  .stage.dim{opacity:.3}
+  .panel{
+    position:relative;margin:0;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;overflow:hidden;
+  }
+  figcaption{
+    position:absolute;top:11px;left:16px;
+    font-size:13px;z-index:2;
+    pointer-events:none;user-select:none;
+  }
+  .note{color:var(--dim);font-size:12px}
+  canvas{display:block;width:100%;touch-action:none;cursor:ew-resize}
+  .p1 canvas{height:214px}
+  .p2 canvas{height:156px}
+  .p3 canvas{height:226px}
+
+  :focus-visible{outline:1.5px solid rgba(134,171,212,.7);outline-offset:2px}
+
+  @media (prefers-reduced-motion:reduce){
+    .sub,.chev,.intro-body{transition:none}
+  }
+
+  @media (max-width:560px){
+    body{padding:34px 14px 56px}
+    .p1 canvas{height:170px}
+    .p2 canvas{height:126px}
+    .p3 canvas{height:182px}
+    .pills{margin-left:0}
+  }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>O Teorema Fundamental do Cálculo</h1>
+    <p class="sub" id="legend"><span id="legendText"></span> <span id="legendVal"></span></p>
+  </header>
+
+  <section class="intro open" id="intro">
+    <button class="intro-toggle" id="introToggle" aria-expanded="true">
+      o que é o teorema? <span class="chev" aria-hidden="true">&darr;</span>
+    </button>
+    <div class="intro-body">
+      <div>
+        <p>
+          Chame de <span class="math tF">F(x)</span> a área acumulada sob
+          <span class="math tf">f</span>, do início do domínio até <span class="math">x</span>.
+          O teorema diz que a taxa de variação dessa área, em cada ponto, é o próprio
+          valor de <span class="math tf">f</span> ali &mdash;
+          <span class="math tF">F&prime;(x)</span>&nbsp;=&nbsp;<span class="math tf">f(x)</span>.
+          Acumular e derivar são, portanto, operações inversas
+          <span class="note">(dê play ou arraste o ponto para ver)</span>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="controls">
+    <button id="play" aria-label="Reproduzir" title="Reproduzir (espaço)">
+      <svg viewBox="0 0 14 14" aria-hidden="true">
+        <path class="i-play" d="M4.2 2.5v9l7.2-4.5z"></path>
+        <g class="i-pause" style="display:none">
+          <rect x="3.4" y="2.7" width="2.6" height="8.6" rx="1"></rect>
+          <rect x="8" y="2.7" width="2.6" height="8.6" rx="1"></rect>
+        </g>
+      </svg>
+    </button>
+
+    <label class="speed">
+      <span>velocidade</span>
+      <input id="speed" type="range" min="0.3" max="2.5" step="0.05" value="1"
+             aria-label="Velocidade da animação">
+    </label>
+
+    <div class="pills" role="group" aria-label="Escolher função">
+      <button class="pill math active" data-fn="0">x&sup2;</button>
+      <button class="pill math" data-fn="1">sen&nbsp;x</button>
+      <button class="pill math" data-fn="2">x&sup3; &minus; x</button>
+    </div>
+  </div>
+
+  <section id="stage" class="stage">
+    <figure class="panel p1">
+      <figcaption><span class="math tf">f(x)</span></figcaption>
+      <canvas id="c1"></canvas>
+    </figure>
+    <figure class="panel p2">
+      <figcaption><span class="math tdf">f&prime;(x)</span><span class="note"> &middot; inclinação da tangente</span></figcaption>
+      <canvas id="c2"></canvas>
+    </figure>
+    <figure class="panel p3">
+      <figcaption><span class="math tF">F(x)</span><span class="note"> &middot; área acumulada</span></figcaption>
+      <canvas id="c3"></canvas>
+    </figure>
+  </section>
+</main>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------- paleta (espelha o CSS) ---------- */
+const C = {
+  ink:  "#e7e5df",
+  panel:"#171922",
+  blue: "#86abd4",
+  gold: "#cfa870",
+  sage: "#93bb9a",
+  blueFaint: "rgba(134,171,212,0.30)",
+  sageFill:  "rgba(147,187,154,0.16)",
+  rustFill:  "rgba(191,138,117,0.16)",
+  goldStem:  "rgba(207,168,112,0.35)",
+  axis:  "rgba(231,229,223,0.20)",
+  guide: "rgba(231,229,223,0.09)"
+};
+
+/* ---------- funções pré-definidas ---------- */
+const TAU = Math.PI * 2;
+const FUNCS = [
+  { f: x => x * x,           df: x => 2 * x,         F: x => x * x * x / 3,               dom: [0, 2.4] },
+  { f: Math.sin,             df: Math.cos,           F: x => -Math.cos(x),                dom: [0, TAU] },
+  { f: x => x * x * x - x,   df: x => 3 * x * x - 1, F: x => x * x * x * x / 4 - x * x / 2, dom: [-1.6, 1.6] }
+];
+
+const PAD = { l: 22, r: 22, t: 32, b: 16 };
+const BASE_SWEEP = 12;               // segundos para varrer o domínio a 1x
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- elementos ---------- */
+const stage     = document.getElementById("stage");
+const playBtn   = document.getElementById("play");
+const iconPlay  = playBtn.querySelector(".i-play");
+const iconPause = playBtn.querySelector(".i-pause");
+const speedIn   = document.getElementById("speed");
+const pills     = Array.from(document.querySelectorAll(".pill"));
+const legendEl   = document.getElementById("legend");
+const legendText = document.getElementById("legendText");
+const legendVal  = document.getElementById("legendVal");
+const intro       = document.getElementById("intro");
+const introToggle = document.getElementById("introToggle");
+
+const panels = ["c1", "c2", "c3"].map(id => {
+  const canvas = document.getElementById(id);
+  return { canvas, ctx: canvas.getContext("2d"), w: 0, h: 0, yMin: -1, yMax: 1 };
+});
+
+/* ---------- estado ---------- */
+let fn = FUNCS[0];
+let a = fn.dom[0], b = fn.dom[1];
+let Fa = fn.F(a);
+const FF = x => fn.F(x) - Fa;        // F com F(a) = 0
+
+let cur = a + (b - a) * 0.42;        // posição suavizada
+let tar = cur;                       // posição alvo
+let playing = false, rewinding = false;
+let speed = parseFloat(speedIn.value);
+let last = performance.now();
+let dirty = true, prevCur = NaN;
+let fScale = 1, dfScale = 1;          // amplitudes de |f| e |f'| no domínio
+let criticals = [];                   // pontos onde f'(x) = 0
+let interacted = false;               // primeira interação colapsa a introdução
+let legendKey = "", legendSwapT = 0, legendFading = false;
+
+/* ---------- escalas ---------- */
+function xPix(p, x){ return PAD.l + (x - a) / (b - a) * (p.w - PAD.l - PAD.r); }
+function yPix(p, y){ return PAD.t + (p.yMax - y) / (p.yMax - p.yMin) * (p.h - PAD.t - PAD.b); }
+
+function setRange(p, values){
+  let mn = Math.min(...values), mx = Math.max(...values);
+  if (mx - mn < 1e-9){ mx = mn + 1; }
+  const pad = (mx - mn) * 0.14;
+  p.yMin = mn - pad;
+  p.yMax = mx + pad;
+}
+
+function computeRanges(){
+  const N = 480;
+  const v1 = [0], v2 = [0], v3 = [0];
+  let fS = 0, dfS = 0;
+  for (let i = 0; i <= N; i++){
+    const x = a + (b - a) * i / N;
+    const fv = fn.f(x), dv = fn.df(x);
+    v1.push(fv);
+    v2.push(dv);
+    v3.push(fv, FF(x));
+    fS = Math.max(fS, Math.abs(fv));
+    dfS = Math.max(dfS, Math.abs(dv));
+  }
+  fScale = Math.max(fS, 1e-9);
+  dfScale = Math.max(dfS, 1e-9);
+  setRange(panels[0], v1);
+  setRange(panels[1], v2);
+  setRange(panels[2], v3);
+}
+
+function setFunction(i){
+  const frac = Math.min(Math.max((cur - a) / (b - a), 0), 1);
+  fn = FUNCS[i];
+  a = fn.dom[0]; b = fn.dom[1]; Fa = fn.F(a);
+  cur = tar = a + (b - a) * frac;
+  computeRanges();
+  findCriticals();
+  pills.forEach((p, j) => p.classList.toggle("active", j === i));
+  dirty = true;
+}
+
+/* ---------- pontos críticos: raízes de f' por mudança de sinal + bisseção ---------- */
+function bisect(lo, hi){
+  let flo = fn.df(lo);
+  for (let i = 0; i < 60; i++){
+    const mid = (lo + hi) / 2;
+    const fm = fn.df(mid);
+    if (fm === 0) return mid;
+    if (flo * fm < 0) hi = mid;
+    else { lo = mid; flo = fm; }
+  }
+  return (lo + hi) / 2;
+}
+
+function classify(x){
+  const h = (b - a) * 0.01;
+  if (x - a < h) return fn.df(x + h) > 0 ? "min" : "max";
+  if (b - x < h) return fn.df(x - h) > 0 ? "max" : "min";
+  const sb = Math.sign(fn.df(x - h)), sa = Math.sign(fn.df(x + h));
+  if (sb > 0 && sa < 0) return "max";
+  if (sb < 0 && sa > 0) return "min";
+  return "inflex";
+}
+
+function findCriticals(){
+  const N = 600;
+  const xs = [];
+  const tinyV = dfScale * 1e-9 + 1e-12;
+  let px = a, pv = fn.df(a);
+  if (Math.abs(pv) <= tinyV) xs.push(a);
+  for (let i = 1; i <= N; i++){
+    const x = a + (b - a) * i / N;
+    const v = fn.df(x);
+    if (Math.abs(v) <= tinyV) xs.push(x);
+    else if (pv * v < 0) xs.push(bisect(px, x));
+    px = x; pv = v;
+  }
+  const minGap = (b - a) * 0.02;
+  const merged = [];
+  for (const x of xs.sort((p, q) => p - q)){
+    if (!merged.length || x - merged[merged.length - 1] > minGap) merged.push(x);
+  }
+  criticals = merged.slice(0, 3).map(x => {
+    const kind = classify(x);
+    const edge = (x - a) < (b - a) * 0.02 || (b - x) < (b - a) * 0.02;
+    return {
+      x, y: fn.f(x), kind, edge,
+      label: kind === "max" ? "máximo local" : kind === "min" ? "mínimo local" : "inflexão"
+    };
+  });
+}
+
+/* proximidade do ponto móvel a um x (janela de 3% do domínio), suavizada */
+function proximity(x){
+  const d = Math.abs(cur - x) / ((b - a) * 0.03);
+  if (d >= 1) return 0;
+  const t = 1 - d;
+  return t * t * (3 - 2 * t);
+}
+
+/* ---------- desenho ---------- */
+function pathFor(p, g, x0, x1){
+  const path = new Path2D();
+  const n = Math.max(2, Math.ceil((xPix(p, x1) - xPix(p, x0)) / 2));
+  for (let i = 0; i <= n; i++){
+    const x = x0 + (x1 - x0) * i / n;
+    const px = xPix(p, x), py = yPix(p, g(x));
+    if (i === 0) path.moveTo(px, py); else path.lineTo(px, py);
+  }
+  return path;
+}
+
+function stroke(p, path, color, width){
+  p.ctx.strokeStyle = color;
+  p.ctx.lineWidth = width;
+  p.ctx.stroke(path);
+}
+
+function tangent(p, x, y, m, color, half){
+  const sx = (p.w - PAD.l - PAD.r) / (b - a);
+  const sy = (p.h - PAD.t - PAD.b) / (p.yMax - p.yMin);
+  let dx = 1, dy = -m * (sy / sx);
+  const L = Math.hypot(dx, dy);
+  dx = dx / L * half; dy = dy / L * half;
+  const cx = xPix(p, x), cy = yPix(p, y);
+  p.ctx.strokeStyle = color;
+  p.ctx.lineWidth = 1.6;
+  p.ctx.beginPath();
+  p.ctx.moveTo(cx - dx, cy - dy);
+  p.ctx.lineTo(cx + dx, cy + dy);
+  p.ctx.stroke();
+}
+
+function dot(p, x, y, color){
+  const cx = xPix(p, x), cy = yPix(p, y);
+  p.ctx.beginPath();
+  p.ctx.arc(cx, cy, 6, 0, TAU);
+  p.ctx.fillStyle = C.panel;
+  p.ctx.fill();
+  p.ctx.beginPath();
+  p.ctx.arc(cx, cy, 4, 0, TAU);
+  p.ctx.fillStyle = color;
+  p.ctx.fill();
+}
+
+/* marcador fixo de ponto crítico; t = proximidade [0..1] do ponto móvel */
+function critMarker(p, x, y, t, label){
+  const cx = xPix(p, x), cy = yPix(p, y);
+  const ctx = p.ctx;
+  ctx.save();
+  if (t > 0.01){
+    ctx.shadowColor = "rgba(231,229,223," + (0.35 * t).toFixed(3) + ")";
+    ctx.shadowBlur = 8 * t;
+  }
+  ctx.beginPath();
+  ctx.arc(cx, cy, 3 + 1.8 * t, 0, TAU);
+  ctx.fillStyle = C.panel;
+  ctx.fill();
+  ctx.strokeStyle = "rgba(231,229,223," + (0.3 + 0.45 * t).toFixed(3) + ")";
+  ctx.lineWidth = 1.4;
+  ctx.stroke();
+  ctx.restore();
+  if (label && t > 0.03){
+    ctx.font = "12px system-ui,-apple-system,'Segoe UI',sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillStyle = "rgba(231,229,223," + (0.62 * t).toFixed(3) + ")";
+    const lx = Math.min(Math.max(cx, PAD.l + 46), p.w - PAD.r - 46);
+    const above = cy > PAD.t + 30;
+    ctx.fillText(label, lx, above ? cy - 14 : cy + 22);
+  }
+}
+
+function fillArea(p){
+  if (cur <= a + 1e-9) return;
+  const ay = yPix(p, 0);
+  const path = new Path2D();
+  path.moveTo(xPix(p, a), ay);
+  const n = Math.max(2, Math.ceil((xPix(p, cur) - xPix(p, a)) / 2));
+  for (let i = 0; i <= n; i++){
+    const x = a + (cur - a) * i / n;
+    path.lineTo(xPix(p, x), yPix(p, fn.f(x)));
+  }
+  path.lineTo(xPix(p, cur), ay);
+  path.closePath();
+
+  const ctx = p.ctx;
+  ctx.save();                                   /* área positiva */
+  ctx.beginPath(); ctx.rect(0, 0, p.w, ay); ctx.clip();
+  ctx.fillStyle = C.sageFill; ctx.fill(path);
+  ctx.restore();
+  ctx.save();                                   /* área negativa */
+  ctx.beginPath(); ctx.rect(0, ay, p.w, p.h - ay); ctx.clip();
+  ctx.fillStyle = C.rustFill; ctx.fill(path);
+  ctx.restore();
+}
+
+function render(){
+  const dpr = window.devicePixelRatio || 1;
+
+  for (const p of panels){
+    if (!p.w) continue;
+    const ctx = p.ctx;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, p.w, p.h);
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+
+    const gx = xPix(p, cur);                    /* guia vertical */
+    ctx.strokeStyle = C.guide;
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(gx, 6); ctx.lineTo(gx, p.h - 6); ctx.stroke();
+
+    const ay = yPix(p, 0);                      /* eixo y = 0 */
+    ctx.strokeStyle = C.axis;
+    ctx.beginPath(); ctx.moveTo(PAD.l - 6, ay); ctx.lineTo(p.w - PAD.r + 6, ay); ctx.stroke();
+  }
+
+  const p1 = panels[0], p2 = panels[1], p3 = panels[2];
+
+  /* painel 1: f, pontos críticos, tangente (dourada, como f'), ponto */
+  if (p1.w){
+    stroke(p1, pathFor(p1, fn.f, a, b), C.blue, 2);
+    for (const c of criticals) critMarker(p1, c.x, c.y, proximity(c.x), c.label);
+    tangent(p1, cur, fn.f(cur), fn.df(cur), C.gold, 34);
+    dot(p1, cur, fn.f(cur), C.ink);
+  }
+
+  /* painel 2: f' traçada até x; a altura é a inclinação de cima */
+  if (p2.w){
+    const dv = fn.df(cur);
+    const ay2 = yPix(p2, 0);
+    p2.ctx.strokeStyle = C.goldStem;
+    p2.ctx.lineWidth = 1.5;
+    p2.ctx.beginPath();
+    p2.ctx.moveTo(xPix(p2, cur), ay2);
+    p2.ctx.lineTo(xPix(p2, cur), yPix(p2, dv));
+    p2.ctx.stroke();
+    stroke(p2, pathFor(p2, fn.df, a, cur), C.gold, 2);
+    for (const c of criticals) critMarker(p2, c.x, 0, proximity(c.x), null);
+    dot(p2, cur, dv, C.gold);
+  }
+
+  /* painel 3: área acumulada + F; a tangente de F é azul, como f */
+  if (p3.w){
+    fillArea(p3);
+    stroke(p3, pathFor(p3, fn.f, a, b), C.blueFaint, 1.4);
+    stroke(p3, pathFor(p3, FF, a, cur), C.sage, 2);
+    tangent(p3, cur, FF(cur), fn.f(cur), C.blue, 30);
+    dot(p3, cur, FF(cur), C.sage);
+  }
+}
+
+/* ---------- laço de animação ---------- */
+function frame(now){
+  const dt = Math.min((now - last) / 1000, 0.05);
+  last = now;
+
+  if (playing && !rewinding){
+    tar += dt * speed * (b - a) / BASE_SWEEP;
+    if (tar >= b) tar = b;
+  }
+
+  const k = reduceMotion ? 1 : 1 - Math.exp(-dt * (rewinding ? 3.2 : 9));
+  cur += (tar - cur) * k;
+
+  if (rewinding && Math.abs(cur - a) < (b - a) * 0.003){
+    cur = tar = a;
+    rewinding = false;
+  }
+  if (playing && !rewinding && tar >= b && Math.abs(b - cur) < (b - a) * 0.0015){
+    cur = b;
+    playing = false;
+    syncPlayIcon();
+  }
+
+  if (dirty || Math.abs(cur - prevCur) > (b - a) * 1e-7){
+    render();
+    updateLegend();
+    prevCur = cur;
+    dirty = false;
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ---------- controles ---------- */
+function syncPlayIcon(){
+  iconPlay.style.display  = playing ? "none" : "";
+  iconPause.style.display = playing ? "" : "none";
+  playBtn.setAttribute("aria-label", playing ? "Pausar" : "Reproduzir");
+  playBtn.title = playing ? "Pausar (espaço)" : "Reproduzir (espaço)";
+}
+
+function togglePlay(){
+  if (playing){
+    playing = false;
+    rewinding = false;
+    tar = cur;
+  } else {
+    firstInteraction();
+    if (cur >= b - (b - a) * 0.002){
+      rewinding = true;
+      tar = a;
+    }
+    playing = true;
+  }
+  syncPlayIcon();
+}
+
+playBtn.addEventListener("click", togglePlay);
+speedIn.addEventListener("input", () => { speed = parseFloat(speedIn.value); });
+
+pills.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const i = parseInt(btn.dataset.fn, 10);
+    if (FUNCS[i] === fn) return;
+    if (reduceMotion){
+      setFunction(i);
+      return;
+    }
+    stage.classList.add("dim");
+    setTimeout(() => {
+      setFunction(i);
+      stage.classList.remove("dim");
+    }, 150);
+  });
+});
+
+/* arrastar em qualquer painel */
+function xFromEvent(p, e){
+  const r = p.canvas.getBoundingClientRect();
+  const t = ((e.clientX - r.left) - PAD.l) / (r.width - PAD.l - PAD.r);
+  return a + Math.min(Math.max(t, 0), 1) * (b - a);
+}
+
+panels.forEach(p => {
+  p.canvas.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    p.canvas.setPointerCapture(e.pointerId);
+    firstInteraction();
+    playing = false; rewinding = false;
+    syncPlayIcon();
+    tar = xFromEvent(p, e);
+    const move = ev => { tar = xFromEvent(p, ev); };
+    const up = () => {
+      p.canvas.removeEventListener("pointermove", move);
+    };
+    p.canvas.addEventListener("pointermove", move);
+    p.canvas.addEventListener("pointerup", up, { once: true });
+    p.canvas.addEventListener("pointercancel", up, { once: true });
+  });
+});
+
+/* teclado: espaço alterna, setas movem */
+addEventListener("keydown", e => {
+  const tag = e.target && e.target.tagName;
+  if (tag === "INPUT" || tag === "BUTTON") return;
+  if (e.code === "Space"){
+    e.preventDefault();
+    togglePlay();
+  } else if (e.key === "ArrowRight" || e.key === "ArrowLeft"){
+    e.preventDefault();
+    firstInteraction();
+    playing = false; rewinding = false;
+    syncPlayIcon();
+    const step = (b - a) * (e.shiftKey ? 0.05 : 0.012) * (e.key === "ArrowRight" ? 1 : -1);
+    tar = Math.min(b, Math.max(a, tar + step));
+  }
+});
+
+/* ---------- legenda viva: frase recalculada a cada frame a partir de cur ---------- */
+function fmt(v){
+  let s = Math.abs(v) < 1 ? v.toFixed(2) : v.toFixed(1);
+  if (parseFloat(s) === 0) s = s.replace("-", "");
+  return s.replace("-", "\u2212").replace(".", ",");
+}
+
+function legendPhrase(){
+  const rel = (cur - a) / (b - a);
+  const s = fn.df(cur);
+  const fv = fn.f(cur);
+  const df_ = '<span class="math tdf">f&prime;</span>';
+  const f_  = '<span class="math tf">f</span>';
+  const F_  = '<span class="math tF">F</span>';
+
+  let near = null, best = 1;
+  for (const c of criticals){
+    const d = Math.abs(cur - c.x) / ((b - a) * 0.03);
+    if (d < 1 && d < best){ best = d; near = c; }
+  }
+  if (near){
+    const what = near.edge || near.kind === "inflex"
+      ? "tangente horizontal"
+      : near.kind === "max" ? "aqui a curva para de subir"
+                            : "aqui a curva para de descer";
+    return { key: what + " \u2014 inclina\u00e7\u00e3o " + df_ + " \u2248", val: fmt(s) };
+  }
+  if (rel < 0.06)
+    return { key: "a \u00e1rea sob " + f_ + " mal come\u00e7ou \u2014 " + F_ + " \u2248", val: fmt(FF(cur)) };
+  if (rel > 0.985)
+    return { key: "fim do dom\u00ednio \u2014 \u00e1rea total " + F_ + " \u2248", val: fmt(FF(cur)) };
+  if (fv < -0.3 * fScale)
+    return { key: f_ + " est\u00e1 negativa: a \u00e1rea acumulada diminui \u2014 " + f_ + " \u2248", val: fmt(fv) };
+  const mag = Math.abs(s) / dfScale;
+  if (mag > 0.55)
+    return { key: (s > 0 ? "subida r\u00e1pida" : "descida r\u00e1pida") + " \u2014 inclina\u00e7\u00e3o " + df_ + " \u2248", val: fmt(s) };
+  if (mag < 0.08)
+    return { key: "quase plana \u2014 inclina\u00e7\u00e3o " + df_ + " \u2248", val: fmt(s) };
+  return { key: (s > 0 ? f_ + " subindo" : f_ + " descendo") + " \u2014 inclina\u00e7\u00e3o " + df_ + " \u2248", val: fmt(s) };
+}
+
+function updateLegend(){
+  const it = legendPhrase();
+  if (it.key !== legendKey){
+    legendKey = it.key;
+    legendFading = true;
+    legendEl.style.opacity = "0";
+    clearTimeout(legendSwapT);
+    legendSwapT = setTimeout(() => {
+      legendText.innerHTML = legendKey;
+      legendVal.textContent = it.val;
+      legendEl.style.opacity = "";
+      legendFading = false;
+    }, 110);
+  } else if (!legendFading){
+    legendVal.textContent = it.val;
+  }
+}
+
+/* ---------- introdução colapsável ---------- */
+function setIntro(open){
+  intro.classList.toggle("open", open);
+  introToggle.setAttribute("aria-expanded", String(open));
+}
+function firstInteraction(){
+  if (interacted) return;
+  interacted = true;
+  setIntro(false);
+}
+introToggle.addEventListener("click", () => {
+  setIntro(!intro.classList.contains("open"));
+});
+
+/* ---------- redimensionamento ---------- */
+const ro = new ResizeObserver(entries => {
+  const dpr = window.devicePixelRatio || 1;
+  for (const en of entries){
+    const p = panels.find(q => q.canvas === en.target);
+    if (!p) continue;
+    p.w = en.contentRect.width;
+    p.h = en.contentRect.height;
+    p.canvas.width  = Math.round(p.w * dpr);
+    p.canvas.height = Math.round(p.h * dpr);
+  }
+  dirty = true;
+});
+panels.forEach(p => ro.observe(p.canvas));
+
+/* ---------- início ---------- */
+setFunction(0);
+cur = tar = a + (b - a) * 0.42;
+syncPlayIcon();
+requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
+
+})();
+</script>
+</body>
+</html>
